@@ -11,3 +11,9 @@ If something isn't making sense, make a help ticket or reach out! Starting to co
 And lastly
 
 **READ THE COMMENTS!!**
+
+## Places to work on (in no particular order):
+
+- App
+- Notes
+- Create
