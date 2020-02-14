@@ -69,7 +69,24 @@
       //    - one to delete the note entirely
       // use the functions created in App to modify the note
       const Notes = ({ notes, archived, update, destroy }) => {
-        return null
+        
+        return (
+          <div>
+            {
+              notes.filter(note => {
+                return note.archived === archived
+              }).map((note, idx) => {
+                return (
+                  <ul key={idx}>
+                    <li>{note.text}</li>
+                    <button>{note.archived ? 'unarchive' : 'archive'}</button>
+                    <button onClick={() => destroy(note)}>destroy</button>
+                  </ul>
+                )
+              })
+            }
+          </div>
+        )
       }
 
       // this part is done for you!
@@ -104,15 +121,35 @@
       // redirect them to the /notes page by using the history prop that's passed down
       class Create extends Component {
         constructor() {
-          super()
-
+          super();
+          this.state = {
+            value: ''
+          };
           this.create = this.create.bind(this)
         }
-        create() {}
+        create(ev) {
+          this.setState({value: ev.target.value});
+        }
         render() {
-          return null
+          const { value } = this.state;
+          const onSubmit = (ev) => {
+            ev.preventDefault();
+            this.props.create(value)
+          }
+          // console.log(value)
+          return (
+            <form onSubmit={onSubmit}>
+                <input placeholder='create new note' type='text' value={ value } onChange={(ev) => this.setState({value: ev.target.value})}/>
+                <button onClick={() => {}}>Create</button>
+            </form>
+          )
         }
       }
+  
+      // <form onSubmit={ onSubmit }>
+      //         <input name='foo' value={ value } onChange={ (ev)=> this.setState({ value: ev.target.value})}/>
+      //         <button disabled={ value === ''}>Save</button>
+      //       </form>
 
       class App extends Component {
         constructor() {
@@ -130,22 +167,49 @@
 
         // maybe something should be done in this function...?
         // hmmm, I wonder if the state should be loaded with some stuff...
-        async componentDidMount() {}
+        async componentDidMount() {
+          const user = await fetchUser();
+          const notes = (await axios.get(`${API}/users/${user.id}/notes`)).data;
+          this.setState({user, notes})
+        }
 
         // this should make an axios request to delete a note
         // AND update the state accordingly
-        async destroy(note) {}
+        async destroy(note) {
+          const {user, notes} = this.state;
 
+          await axios.delete(`${API}/users/${user.id}/notes/${note.id}`)
+          this.setState({
+            notes: notes.filter(_note => _note.id !== note.id)
+          })  
+        }
+        
         // this should make an axios request to update a note
         // AND update the state & note accordingly with the result of that request
-        async update(note) {}
+        async update(note) {
+          const {user, notes} = this.state;
+
+          const updated = (await axios.put(`${API}/users/${user.id}/notes/${note.id}`, {archived: !note.archived})).data;
+          this.setState({
+            // notes: notes.map(_note => note.id)
+          })
+        }
         // this should make an axios request to create a note
         // AND update the state with the result of that request
-        async create(note) {}
+        async create(text) {
+          const {user, notes} = this.state;
+
+          const created = (await axios.post(`${API}/users/${user.id}/notes`, {archived: false, text: text})).data;
+          this.setState({
+            notes: [...notes, created]
+          })
+        }
 
         // this is all done for you, but like the readme says, make sure you understand what's being done here...
         render() {
           const { notes, user } = this.state
+
+          // console.log(notes)
           const { update, create, destroy } = this
           return (
             <HashRouter>
